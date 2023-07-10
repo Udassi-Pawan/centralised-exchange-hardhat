@@ -24,13 +24,6 @@ const config: HardhatUserConfig = {
 
 export default config;
 
-// nfts
-// mumbai = 0x670E9c8cb57b2C924dac907b214415C26D656693
-// sepolia = 0x0fBFFDfFA75d47d4d60047523946820Be611AceB
-// bsc = 0x70AB09705d2182690BB5366fa643D2C017BB8bE0
-
-//crypto
-// sepolia = 0xac65BFc5Aa4f481f0FC36CF4Ac39CEB264934dCd
-
-//exchange
-// sepolia = 0x9dfC54c43Bb7f46c3bA7E9892876DF60D35ff2f1
+// sepoli = 0x2554eFC6bc5d6738019c02DAC274e7A1b7aDE990
+// mumbai = 
+// bsc =  

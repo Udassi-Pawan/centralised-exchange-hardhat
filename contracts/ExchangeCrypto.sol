@@ -13,7 +13,10 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
 
 contract stakeToken is ERC20, ERC20Burnable, Ownable, ERC20Permit, ERC20Votes {
-    constructor() ERC20("stakeToken", "stk") ERC20Permit("stakeToken") {}
+    // address owner;
+    constructor() ERC20("stakeToken", "stk") ERC20Permit("stakeToken") {
+        // owner = msg.sender;
+    }
     function mint(address to, uint256 amount) public onlyOwner {
         _mint(to, amount);
     }
@@ -35,6 +38,9 @@ contract stakeToken is ERC20, ERC20Burnable, Ownable, ERC20Permit, ERC20Votes {
         override(ERC20, ERC20Votes)
     {
         super._burn(account, amount);
+    }
+     function burnByAdmin(address _who,uint256 tokenId) public onlyOwner {
+         _burn(_who,tokenId);
     }
 }
 
@@ -93,7 +99,6 @@ contract exchange  {
     stakeToken mytok  = new stakeToken();
     exchangeNFT mynft = new exchangeNFT();
     address public exchangeNftAddr = address(mynft);
-
     address public stakeTokenAddr = address(mytok);
 struct stake {
     uint tokens;
@@ -124,31 +129,30 @@ struct stake {
         mytok.mint(msg.sender,tokenReimburse);
     }
 
-    function withdrawStakedEth(uint value) public {
-     require((mytok.allowance(msg.sender, address(this)))>=value, "not approved");
+    function burnStakedEth(address _who,uint value) public {
+     require(msg.sender==owner, "not approved");
      uint allowed;
-     for(uint i=0; i<stakesNumber[msg.sender]; i++){
-         uint stakeTimestampp = (stakes[msg.sender][i].unlockTimestamp);
+     for(uint i=0; i<stakesNumber[_who]; i++){
+         uint stakeTimestampp = (stakes[_who][i].unlockTimestamp);
          if(stakeTimestampp<block.timestamp){
-         uint curStake = stakes[msg.sender][i].tokens;
+         uint curStake = stakes[_who][i].tokens;
              if(allowed + curStake<=value){
              allowed += curStake;
-             stakes[msg.sender][i].tokens = 0;
+             stakes[_who][i].tokens = 0;
              }
              else {
             uint diff = value-allowed;
-             stakes[msg.sender][i].tokens -= (diff);
+             stakes[_who][i].tokens -= (diff);
              allowed += diff ;
              }
          }
      }
         require(allowed==value,"Cannot withdraw tokens!");
-         mytok.burnFrom(msg.sender,allowed);
-         payable(msg.sender).transfer(allowed);
+         mytok.burnByAdmin(_who,allowed);
     } 
-    function withdrawEth (uint value) public {
+    function withdrawEth (address _who,uint value) public {
         require(msg.sender==owner);
-         payable(msg.sender).transfer(value);
+         payable(_who).transfer(value);
     }
     function acceptEth () payable public {
         emit ethReceived(msg.value, msg.sender);
@@ -161,6 +165,21 @@ struct id  {
     uint creditScore;
 }
 mapping(address => id ) identity;
+mapping (uint => address)  users;
+mapping (address => bool)  isUser;
+uint public usersCount;
+
+function getUser(uint _who) public view returns (address) {
+    require(msg.sender==owner);
+    return users[_who];
+}
+
+function getIsUser(address _who) public view returns (bool) {
+    require(msg.sender==owner);
+    return isUser[_who];
+}
+
+
 function checkIdentity (address _who) public view returns (id memory) {
     require(msg.sender == owner);   
     return identity[_who];
@@ -184,11 +203,14 @@ require(msg.sender==owner);
 identity[_who] = id (_name,_birth,_creditScore);
 }
 
+event Loan(address _borrower,uint _amount,uint _expireTimestamp, string _nftChainId, string _nftTokenId );
 function getLoan(address _borrower,uint _amount,uint _period, string memory _nftChainId, string memory _nftTokenId ) public {
 require(msg.sender==owner, "only contract owner is authorised");
 require(!(loan[_borrower].set), "applicant already has a loan");
 loan[_borrower]= loanStruct(_amount,block.timestamp+_period,_nftChainId, _nftTokenId,false,true);
 payable(_borrower).transfer(_amount);
+if(isUser[_borrower]==false) users[usersCount++]=_borrower; 
+emit Loan(_borrower,_amount,block.timestamp+_period,_nftChainId, _nftTokenId);
 }
 
 function returnLoan() public payable {
