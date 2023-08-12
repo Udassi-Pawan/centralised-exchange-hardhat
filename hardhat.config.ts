@@ -24,6 +24,10 @@ const config: HardhatUserConfig = {
 
 export default config;
 
-// sepoli = 0x2554eFC6bc5d6738019c02DAC274e7A1b7aDE990
-// mumbai = 
-// bsc =  
+// sepoli =
+// mumbai =
+// bsc =
+
+// ["11155111", "0xfC28ED155A3E23E6992eD3551c1822232FD2E9Ba"],
+// ["80001", "0x565ef94Bd04e988C6b15dCE6C47D5716C0DD36c4"],
+// ["97", "0x99528756Da1746779B34247fce6285d91A2c2868"],

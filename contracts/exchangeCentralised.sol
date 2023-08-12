@@ -13,9 +13,7 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
 
 contract stakeToken is ERC20, ERC20Burnable, Ownable, ERC20Permit, ERC20Votes {
-    // address owner;
     constructor() ERC20("stakeToken", "stk") ERC20Permit("stakeToken") {
-        // owner = msg.sender;
     }
     function mint(address to, uint256 amount) public onlyOwner {
         _mint(to, amount);
@@ -93,12 +91,15 @@ contract exchangeNFT is ERC721, ERC721Enumerable, ERC721URIStorage, ERC721Burnab
 contract exchange  {
     address public owner;
     event ethReceived (uint value,address from );
-    constructor( ) {
+    exchangeNFT mynft ;
+    address public exchangeNftAddr;
+    constructor( address _mynft ) {
         owner = msg.sender;
+        mynft = exchangeNFT(_mynft);
+        exchangeNftAddr = _mynft;
     }
+
     stakeToken mytok  = new stakeToken();
-    exchangeNFT mynft = new exchangeNFT();
-    address public exchangeNftAddr = address(mynft);
     address public stakeTokenAddr = address(mytok);
 struct stake {
     uint tokens;
@@ -188,6 +189,7 @@ function checkLoan (address _who) public view returns (loanStruct memory) {
     require(msg.sender == owner);   
     return loan[_who];
 }
+
 struct loanStruct  {
     uint amount;
     uint cutOffTimestamp;
@@ -207,9 +209,10 @@ event Loan(address _borrower,uint _amount,uint _expireTimestamp, string _nftChai
 function getLoan(address _borrower,uint _amount,uint _period, string memory _nftChainId, string memory _nftTokenId ) public {
 require(msg.sender==owner, "only contract owner is authorised");
 require(!(loan[_borrower].set), "applicant already has a loan");
+require(_period <= 3600, "Loan period should be less than 3600s.");
 loan[_borrower]= loanStruct(_amount,block.timestamp+_period,_nftChainId, _nftTokenId,false,true);
 payable(_borrower).transfer(_amount);
-if(isUser[_borrower]==false) users[usersCount++]=_borrower; 
+if(isUser[_borrower]==false) {users[usersCount++]=_borrower; isUser[_borrower]=true; }
 emit Loan(_borrower,_amount,block.timestamp+_period,_nftChainId, _nftTokenId);
 }
 
